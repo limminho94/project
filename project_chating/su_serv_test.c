@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
 		pthread_mutex_unlock(&mutx);
 		
 		
+		
 		pthread_create(&t_id, NULL, handle_clnt, (void*)&clnt_sock);
 		pthread_detach(t_id);
 		printf("Connected client IP: %s \n", inet_ntoa(clnt_adr.sin_addr));
