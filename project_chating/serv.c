@@ -35,7 +35,7 @@ int main(int argc, char *argv[])    // argc : argv[]의 개수 | argv[] 문자�
 	pthread_mutex_init(&mutx, NULL);
     // 서버소켓생성
 	serv_sock=socket(PF_INET, SOCK_STREAM, 0);
-    // 서버소켓 주소할당
+    // 서버소켓 주소초기화
 	memset(&serv_adr, 0, sizeof(serv_adr));
 	serv_adr.sin_family=AF_INET; 
 	serv_adr.sin_addr.s_addr=htonl(INADDR_ANY);
@@ -72,9 +72,10 @@ void * handle_clnt(void * arg)
 	int clnt_sock=*((int*)arg);
 	int str_len=0, i;
 	char msg[BUF_SIZE];
-	// 쓰기 테스트
-    write(clnt_sock,"테스트중입니다\n",strlen("테스트중입니다\n"));
 	
+    // 쓰기 테스트
+    write(clnt_sock,"1.로그인 2.회원가입 3.아이디찾기 4.비밀번호찾기\n",strlen("1.로그인 2.회원가입 3.아이디찾기 4.비밀번호찾기\n"));
+
 	while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
 		send_msg(msg, str_len);
 	
