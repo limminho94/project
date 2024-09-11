@@ -20,9 +20,26 @@ int clnt_cnt=0;
 int clnt_socks[MAX_CLNT];
 pthread_mutex_t mutx;
 
+// User 구조체 선언
+typedef struct 
+{
+	char id[30];
+	char pw[30];
+	char phone[30];
+	char email[30];
+	char question[200];
+	char answer[100];
+	char nick_name[30];
+	int h;
+
+} User;
+// 구조체 변수 선언
+	User user[100] = {{"id001","pw1","010-0000-0001","email1","질문","답변","닉네임", 1}};
+
 // 메인 함수 실행
 int main(int argc, char *argv[])    // argc : argv[]의 개수 | argv[] 문자열의 주소를 저장하는 포인터배열
 {
+	
 	int serv_sock, clnt_sock;
 	struct sockaddr_in serv_adr, clnt_adr;
 	int clnt_adr_sz;
@@ -72,9 +89,92 @@ void * handle_clnt(void * arg)
 	int clnt_sock=*((int*)arg);
 	int str_len=0, i;
 	char msg[BUF_SIZE];
-	// 쓰기 테스트
-    write(clnt_sock,"테스트중입니다\n",strlen("테스트중입니다\n"));
-	
+	char choice[] = {"번호를 선택해주세요\n1.로그인 2.회원가입 3.아이디찾기 4.비밀번호찾기\n"};
+	char suc_login[] = {"로그인 성공\n"};
+
+	while(1)
+	{
+		write(clnt_sock, choice, strlen(choice));
+		str_len = read(clnt_sock, msg, sizeof(msg));
+		// strcmp 함수를 쓰기위해 msg 마지막값에 널문자를 넣어준다.
+		msg[str_len-1]= '\0';
+		// strcmp 첫번째인자와 두번째인자가 같다면 0
+		// 1.로그인
+		if(strcmp(msg,"1") == 0)
+		{
+		// 	write(clnt_sock, id, strlen(id));
+		// 	str_len = read(clnt_sock, msg, sizeof(msg));
+		// 	msg[str_len-1] = '\0';
+		// 	printf("%d\n", str_len);
+		// 	printf("%s\n", msg);
+		// 	for(i=0; i<10; i++)
+		// 	{
+		// 		// 아이디가 일치하는 경우
+		// 		if(strcmp(msg,user[i].id) == 0)
+		// 		{
+					
+		// 		}
+				
+		// 	}
+		// 	// 아이디가 일치하지 않는 경우
+		// 	if(strcmp(msg,user[i].id) != 0)
+		// 	{
+		// 		write(clnt_sock, f_id, strlen(f_id));
+		// 		continue;
+		// 	}
+			
+		}
+		// 회원가입
+		else if(strcmp(msg,"2") == 0)
+		{
+			while(1)
+			{
+				// 회원가입 아이디입력
+				write(clnt_sock, "아이디를 입력하세요(4~15글자)\n", strlen("아이디를 입력하세요(4~15글자)\n"));
+				str_len = read(clnt_sock, msg, sizeof(msg));
+				msg[str_len-1] = '\0';
+				for(i=0; i<100; i++)
+				{
+					if((strlen(msg) < 4 || strlen(msg) > 15) && strlen(user[i].id) < 101)
+					{
+						write(clnt_sock, "글자수가 맞지 않습니다.다시 입력해주세요\n", strlen("글자수가 맞지 않습니다.다시 입력해주세요\n"));
+						break;
+					}
+					else if(user[i].id == msg)
+					{
+						write(clnt_sock, "이미 사용하고 있는 아이디입니다\n", strlen("이미 사용하고 있는 아이디입니다\n"));
+					}
+					else
+					{
+						// 아이디 배열에 저장
+						strcpy(user[i].id, msg);
+						// h 값을 1로 바꿈.
+						user[i].h = 1;
+						printf("%s\n", user[i].id);
+						break;
+					}
+				}
+
+				// 회원가입 비밀번호 입력
+				// write(clnt_sock, "비밀번호를 입력하세요(4~15글자)\n", strlen("비밀번호를 입력하세요(4~15글자)\n"));
+				// str_len = read(clnt_sock, msg, sizeof(msg));
+				// msg[str_len-1] = '\0';
+				// for(i=0; 0<5; i++)
+				// {
+				// 	if(user[i].h == 0)
+				// 	{
+						
+				// 		strcpy(user[i].pw, msg);
+				// 		user[i].h = 1;
+				// 		break;
+				// 	}
+				// }
+			}
+			
+		}
+		
+	}
+    
 	while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
 		send_msg(msg, str_len);
 	

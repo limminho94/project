@@ -75,7 +75,8 @@ void * handle_clnt(void * arg)
 	
     // 쓰기 테스트
     write(clnt_sock,"1.로그인 2.회원가입 3.아이디찾기 4.비밀번호찾기\n",strlen("1.로그인 2.회원가입 3.아이디찾기 4.비밀번호찾기\n"));
-
+	str_len = read(clnt_sock, msg, sizeof(msg));
+	
 	while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
 		send_msg(msg, str_len);
 	
