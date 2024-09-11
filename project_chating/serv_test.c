@@ -133,18 +133,18 @@ void * handle_clnt(void * arg)
 				str_len = read(clnt_sock, msg, sizeof(msg));
 				msg[str_len-1] = '\0';
 				printf("입력문자:%s\n", msg);
-				for(int j=0; j<100; j++)
+				for(int j=0; j<50; j++)
 				{
 					printf("j값:%d\n", j);
 					if(strlen(msg) < 4 || strlen(msg) > 15)
 					{
 						write(clnt_sock, "글자수가 맞지 않습니다.다시 입력해주세요\n", strlen("글자수가 맞지 않습니다.다시 입력해주세요\n"));
-						break;
+						
 					}
 					else if(strcmp(user[j].id, msg) == 0)
 					{
 						write(clnt_sock, "이미 사용하고 있는 아이디입니다\n", strlen("이미 사용하고 있는 아이디입니다\n"));
-				
+						
 					}
 					else
 					{
@@ -157,6 +157,7 @@ void * handle_clnt(void * arg)
 						break;
 					}
 				}
+				
 
 				// 회원가입 비밀번호 입력
 				// write(clnt_sock, "비밀번호를 입력하세요(4~15글자)\n", strlen("비밀번호를 입력하세요(4~15글자)\n"));
