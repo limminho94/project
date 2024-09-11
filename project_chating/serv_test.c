@@ -21,7 +21,7 @@ int clnt_socks[MAX_CLNT];
 pthread_mutex_t mutx;
 
 // User 구조체 선언
-typedef struct 
+typedef struct User
 {
 	char id[30];
 	char pw[30];
@@ -34,7 +34,7 @@ typedef struct
 
 } User;
 // 구조체 변수 선언
-	User user[100] = {{"id001","pw1","010-0000-0001","email1","질문","답변","닉네임", 1}};
+	User user[50] = {{"id001","pw1","010-0000-0001","email1","질문","답변","닉네임", 1}};
 
 // 메인 함수 실행
 int main(int argc, char *argv[])    // argc : argv[]의 개수 | argv[] 문자열의 주소를 저장하는 포인터배열
@@ -90,7 +90,6 @@ void * handle_clnt(void * arg)
 	int str_len=0, i;
 	char msg[BUF_SIZE];
 	char choice[] = {"번호를 선택해주세요\n1.로그인 2.회원가입 3.아이디찾기 4.비밀번호찾기\n"};
-	char suc_login[] = {"로그인 성공\n"};
 
 	while(1)
 	{
@@ -133,24 +132,28 @@ void * handle_clnt(void * arg)
 				write(clnt_sock, "아이디를 입력하세요(4~15글자)\n", strlen("아이디를 입력하세요(4~15글자)\n"));
 				str_len = read(clnt_sock, msg, sizeof(msg));
 				msg[str_len-1] = '\0';
-				for(i=0; i<100; i++)
+				printf("입력문자:%s\n", msg);
+				for(int j=0; j<100; j++)
 				{
-					if((strlen(msg) < 4 || strlen(msg) > 15) && strlen(user[i].id) < 101)
+					printf("j값:%d\n", j);
+					if(strlen(msg) < 4 || strlen(msg) > 15)
 					{
 						write(clnt_sock, "글자수가 맞지 않습니다.다시 입력해주세요\n", strlen("글자수가 맞지 않습니다.다시 입력해주세요\n"));
 						break;
 					}
-					else if(user[i].id == msg)
+					else if(strcmp(user[j].id, msg) == 0)
 					{
 						write(clnt_sock, "이미 사용하고 있는 아이디입니다\n", strlen("이미 사용하고 있는 아이디입니다\n"));
+				
 					}
 					else
 					{
 						// 아이디 배열에 저장
-						strcpy(user[i].id, msg);
+						strcpy(user[j].id , msg);
 						// h 값을 1로 바꿈.
-						user[i].h = 1;
-						printf("%s\n", user[i].id);
+						user[j].h = 1;
+						printf("%d\n", j);
+						printf("%s\n", user[j].id);
 						break;
 					}
 				}
