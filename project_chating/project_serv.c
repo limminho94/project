@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
-#define BUF_SIZE 150
+#define BUF_SIZE 500
 #define MAX_CLNT 256
 #define USER_NUM 100
 
@@ -431,7 +431,7 @@ void * handle_clnt(void * arg)
     //-----------------로그인,회원가입,아이디,비밀번호찾기 끝-------------------------
 
 
-	//-------------------------------------------------------------------------
+	//-----------------------메인채팅방----------------------------------
 	while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
 		send_msg(msg, str_len);
 	
@@ -459,6 +459,7 @@ void send_msg(char * msg, int len)   // send to all
 	int i;
 	pthread_mutex_lock(&mutx);
 	for(i=0; i<clnt_cnt; i++)
+	// 로그인한 유저에게만 메세지전송
 	if(user[i].login == 1)
 	{
 		write(clnt_socks[i], msg, len);

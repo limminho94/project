@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
-#define BUF_SIZE 150
+#define BUF_SIZE 500
 #define MAX_CLNT 256
 #define USER_NUM 100
 
@@ -36,7 +36,7 @@ typedef struct User
 
 } User;
 	// 구조체 변수 선언
-	User user[USER_NUM] = {{"id001","pw001","01012345678","email1","당신의 고향은","광주","멸치", 1 ,},{"id002","pw002","01012345677","email2","당신의 이름은","개똥이","고등어", 1, } };
+	User user[USER_NUM] = {{"id001","pw001","01012345678","email1","당신의 고향은","광주","멸치", 1 , 0},{"id002","pw002","01012345677","email2","당신의 이름은","개똥이","고등어", 1, 0} };
 	
 	// 회원가입 저장 변수 초기화
 	int user_cnt = 0;
@@ -431,7 +431,7 @@ void * handle_clnt(void * arg)
     //-----------------로그인,회원가입,아이디,비밀번호찾기 끝-------------------------
 
 
-	//-------------------------------------------------------------------------
+	//-----------------------메인채팅방----------------------------------
 	while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
 		send_msg(msg, str_len);
 	
@@ -459,6 +459,7 @@ void send_msg(char * msg, int len)   // send to all
 	int i;
 	pthread_mutex_lock(&mutx);
 	for(i=0; i<clnt_cnt; i++)
+	// 로그인한 유저에게만 메세지전송
 	if(user[i].login == 1)
 	{
 		write(clnt_socks[i], msg, len);
