@@ -36,7 +36,7 @@ typedef struct User
 
 } User;
 	// 구조체 변수 선언
-	User user[USER_NUM] = {{"id001","pw001","01012345678","email1","당신의 고향은","광주","멸치", 1 , 0},{"id002","pw002","01012345677","email2","당신의 이름은","개똥이","고등어", 1, 0} };
+	User user[USER_NUM] = {{"id001","pw001","01012345678","email1","당신의 고향은","광주","멸치", 1, 0}};
 	
 	// 회원가입 저장 변수 초기화
 	int user_cnt = 0;
@@ -323,8 +323,13 @@ void * handle_clnt(void * arg)
 			strcpy(user[user_cnt].question, question_msg);
 			strcpy(user[user_cnt].answer, answer_msg);
 			strcpy(user[user_cnt].nick_name, nick_msg);
-			// printf("저장된 아이디,비밀번호,휴대폰번호,이메일,질문,답변,닉네임: %s %s %s %s %s %s %s\n", user[0].id, user[0].pw, user[0].phone, user[0].email, user[0].question, user[0].answer, user[0].nick_name);
+			user[user_cnt].already = 1;
+			for(j=0;j<4;j++)
+			{
+				printf("저장된 아이디,비밀번호,휴대폰번호,이메일,질문,답변,닉네임: %s %s %s %s %s %s %s\n", user[j].id, user[j].pw, user[j].phone, user[j].email, user[j].question, user[j].answer, user[j].nick_name);
+			}
 			user_cnt++;
+			
 			pthread_mutex_unlock(&mutx);
 			
 			continue;
@@ -433,7 +438,11 @@ void * handle_clnt(void * arg)
 
 	//-----------------------메인채팅방----------------------------------
 	while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
+	{
 		send_msg(msg, str_len);
+	}
+		
+
 	
 
 
@@ -458,13 +467,14 @@ void send_msg(char * msg, int len)   // send to all
 {
 	int i;
 	pthread_mutex_lock(&mutx);
-	for(i=0; i<clnt_cnt; i++)
-	// 로그인한 유저에게만 메세지전송
-	if(user[i].login == 1)
+	for(i=0; i<USER_NUM; i++)
 	{
-		write(clnt_socks[i], msg, len);
+		// 로그인한 유저에게만 메세지전송
+		if(user[i].login == 1)
+		{
+			write(clnt_socks[i], msg, len);
+		}
 	}
-		
 	pthread_mutex_unlock(&mutx);
 }
 // 에러 표시?함수
