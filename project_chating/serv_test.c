@@ -30,13 +30,14 @@ typedef struct User
 	char email[30];
 	char question[100];
 	char answer[100];
-	char nick_name[30];
+	char nick_name[50];
 	int already;	// 회원가입하면 1
 	int login;	// 로그인하면 1
+	int sock_num; // 소켓번호
 
 } User;
 	// 구조체 변수 선언
-	User user[USER_NUM] = {{"id001","pw001","01012345678","email1","당신의 고향은","광주","멸치", 1, 0}};
+	User user[USER_NUM] = {{"id001","pw001","01012345678","email1","당신의 고향은","광주","멸치", 1, 0, }};
 	
 	// 회원가입 저장 변수 초기화
 	int user_cnt = 0;
@@ -93,6 +94,7 @@ void * handle_clnt(void * arg)
 {
 	int clnt_sock=*((int*)arg);
 	int str_len=0, i, j, chk;
+	char nick[50];
 	
 	char msg[BUF_SIZE];
 	char login_msg[BUF_SIZE];
@@ -103,7 +105,7 @@ void * handle_clnt(void * arg)
 	char email_msg[BUF_SIZE];
 	char question_msg[BUF_SIZE];
 	char answer_msg[BUF_SIZE];
-	char nick_msg[BUF_SIZE];
+	char nick_msg[BUF_SIZE+100];
 	char choice[] = {"번호를 선택해주세요\n1.로그인 2.회원가입 3.아이디찾기 4.비밀번호찾기\n"};
 
 	
@@ -138,6 +140,8 @@ void * handle_clnt(void * arg)
 					{
 						write(clnt_sock, "로그인성공!\n", strlen("로그인성공!\n"));
 						user[j].login = 1;
+						strcpy(nick, user[j].nick_name);
+						user[j].sock_num = clnt_sock;
 						printf("로그인상태:%d\n", user[j].login);
 						printf("아이디:%s\n", user[j].id);
 						break;
@@ -439,7 +443,20 @@ void * handle_clnt(void * arg)
 	//-----------------------메인채팅방----------------------------------
 	while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
 	{
-		send_msg(msg, str_len);
+		if(strncmp(msg, "/w", 2) == 0)
+		{
+			strtok(msg," ");
+			
+			// strtok(NULL, )
+		}	
+		
+		// 닉네임+문자열
+		sprintf(nick_msg ,"[%s] %s", nick, msg);
+		// msg 버퍼 지우기
+		memset(msg, 0, sizeof(msg));
+		send_msg(nick_msg, strlen(nick_msg));
+		
+		
 	}
 		
 
