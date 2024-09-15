@@ -10,6 +10,8 @@
 #define BUF_SIZE 500
 #define MAX_CLNT 256
 #define USER_NUM 100
+#define COLOR "\033[31m"
+#define END "\033[0m"
 
 // 함수 헤더 선언
 void * handle_clnt(void * arg);
@@ -37,7 +39,9 @@ typedef struct User
 
 } User;
 	// 구조체 변수 선언
-	User user[USER_NUM] = {{"id001","pw001","01012345678","email1","당신의 고향은","광주","멸치", 1, 0, }};
+	User user[USER_NUM] = {{"id01","pw01","01012345678","email1","당신의 고향은","광주","멸치", 1, 0, 0},
+	{"id02","pw02","01012344678","email1","당신의 고향은","광주","고등어", 1, 0, 0},
+	{"id03","pw03","01012345688","email1","당신의 고향은","광주","명태", 1, 0, 0}};
 	
 	// 회원가입 저장 변수 초기화
 	int user_cnt = 0;
@@ -94,10 +98,11 @@ void * handle_clnt(void * arg)
 {
 	int clnt_sock=*((int*)arg);
 	int str_len=0, i, j, chk;
-	char nick[50];
+	char nick[60];
 	
 	char msg[BUF_SIZE];
 	char login_msg[BUF_SIZE];
+
 	char id_msg[BUF_SIZE];
 	char pw_msg[BUF_SIZE];
 	char pw_chk[BUF_SIZE];
@@ -138,10 +143,11 @@ void * handle_clnt(void * arg)
 					}
 					else if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].login != 1)
 					{
-						write(clnt_sock, "로그인성공!\n", strlen("로그인성공!\n"));
+						write(clnt_sock, "로그인성공!\n채팅방에 오신것을 환영합니다\n", strlen("로그인성공!\n채팅방에 오신것을 환영합니다\n"));
 						user[j].login = 1;
 						strcpy(nick, user[j].nick_name);
 						user[j].sock_num = clnt_sock;
+						printf("소켓번호:%d\n", user[j].sock_num);
 						printf("로그인상태:%d\n", user[j].login);
 						printf("아이디:%s\n", user[j].id);
 						break;
@@ -347,7 +353,7 @@ void * handle_clnt(void * arg)
 			{
 				phone_msg[str_len-1] = '\0';
 				chk = 0;
-				for(j=0; 0<USER_NUM; j++)
+				for(j=0; j<USER_NUM; j++)
 				{
 					if(strcmp(phone_msg, user[j].phone) == 0)
 					{
@@ -381,7 +387,7 @@ void * handle_clnt(void * arg)
 				str_len=read(clnt_sock, id_msg, sizeof(id_msg));
 				id_msg[str_len-1] = '\0';
 				chk = 0;
-				for(j=0; 0 <USER_NUM; j++)
+				for(j=0; j <USER_NUM; j++)
 				{	
 					if(strcmp(id_msg, user[j].id) == 0)
 					{
@@ -408,7 +414,7 @@ void * handle_clnt(void * arg)
 					str_len=read(clnt_sock, answer_msg, sizeof(answer_msg));
 					answer_msg[str_len-1] = '\0';
 					chk = 0;
-					for(j=0; 0 <USER_NUM; j++)
+					for(j=0; j <USER_NUM; j++)
 					{	
 						if(strcmp(answer_msg, user[j].answer) == 0)
 						{
@@ -438,23 +444,46 @@ void * handle_clnt(void * arg)
 		}
 	}
     //-----------------로그인,회원가입,아이디,비밀번호찾기 끝-------------------------
-
+	
 
 	//-----------------------메인채팅방----------------------------------
 	while((str_len=read(clnt_sock, msg, sizeof(msg)))!=0)
 	{
+		char *w_nick;
+		char *w_nick_msg;
+		char w_msg[BUF_SIZE+100];
+		// 귓속말
 		if(strncmp(msg, "/w", 2) == 0)
 		{
 			strtok(msg," ");
+			w_nick = strtok(NULL, " ");
+			w_nick_msg = strtok(NULL, "\n");
+			sprintf(w_msg, "%s[%s] %s%s\n", COLOR, nick, w_nick_msg, END);
 			
-			// strtok(NULL, )
+			for(j=0; j<USER_NUM; j++)
+			{
+				if(strcmp(user[j].nick_name,w_nick) == 0)
+				{
+					// printf("소켓번호:%d\n",user[j].sock_num);
+					// printf("user닉:%s\n",user[j].nick_name);
+					write(user[j].sock_num, w_msg, sizeof(w_msg));
+					// printf("귓확인\n");
+					memset(msg, 0, sizeof(msg));
+					break;
+				}
+			}
+
 		}	
-		
 		// 닉네임+문자열
-		sprintf(nick_msg ,"[%s] %s", nick, msg);
-		// msg 버퍼 지우기
-		memset(msg, 0, sizeof(msg));
-		send_msg(nick_msg, strlen(nick_msg));
+		else
+		{
+			sprintf(nick_msg ,"[%s] %s", nick, msg);
+			// msg 버퍼 지우기
+			memset(msg, 0, sizeof(msg));
+			send_msg(nick_msg, strlen(nick_msg));
+		}
+		
+		
 		
 		
 	}
