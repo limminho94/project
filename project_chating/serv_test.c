@@ -34,8 +34,9 @@ typedef struct User
 	char answer[100];
 	char nick_name[50];
 	int already;	// 회원가입하면 1
-	int login;	// 로그인하면 1
+	int status;	// 로그인하면 1	
 	int sock_num; // 소켓번호
+	char *whisper_box;	// 쪽지함
 
 } User;
 	// 구조체 변수 선언
@@ -101,8 +102,6 @@ void * handle_clnt(void * arg)
 	char nick[60];
 	
 	char msg[BUF_SIZE];
-	char login_msg[BUF_SIZE];
-
 	char id_msg[BUF_SIZE];
 	char pw_msg[BUF_SIZE];
 	char pw_chk[BUF_SIZE];
@@ -111,6 +110,7 @@ void * handle_clnt(void * arg)
 	char question_msg[BUF_SIZE];
 	char answer_msg[BUF_SIZE];
 	char nick_msg[BUF_SIZE+100];
+	char search_msg[BUF_SIZE];
 	char choice[] = {"번호를 선택해주세요\n1.로그인 2.회원가입 3.아이디찾기 4.비밀번호찾기\n"};
 
 	
@@ -135,20 +135,20 @@ void * handle_clnt(void * arg)
 				chk = 0;
 				for(j=0; j<USER_NUM; j++)
 				{
-					if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].login == 1)
+					if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].status == 1)
 					{
 						write(clnt_sock, "이미 접속중인 아이디입니다\n", strlen("이미 접속중인 아이디입니다\n"));
 						chk = 1;
 						break;
 					}
-					else if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].login != 1)
+					else if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].status != 1)
 					{
-						write(clnt_sock, "로그인성공!\n채팅방에 오신것을 환영합니다\n", strlen("로그인성공!\n채팅방에 오신것을 환영합니다\n"));
-						user[j].login = 1;
+						write(clnt_sock, "로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s) 귓속말(/w)\n", strlen("로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s) 귓속말(/w)\n"));
+						user[j].status = 1;
 						strcpy(nick, user[j].nick_name);
 						user[j].sock_num = clnt_sock;
-						printf("소켓번호:%d\n", user[j].sock_num);
-						printf("로그인상태:%d\n", user[j].login);
+						// printf("소켓번호:%d\n", user[j].sock_num);
+						// printf("로그인상태:%d\n", user[j].status);
 						printf("아이디:%s\n", user[j].id);
 						break;
 					}
@@ -334,10 +334,10 @@ void * handle_clnt(void * arg)
 			strcpy(user[user_cnt].answer, answer_msg);
 			strcpy(user[user_cnt].nick_name, nick_msg);
 			user[user_cnt].already = 1;
-			for(j=0;j<4;j++)
-			{
-				printf("저장된 아이디,비밀번호,휴대폰번호,이메일,질문,답변,닉네임: %s %s %s %s %s %s %s\n", user[j].id, user[j].pw, user[j].phone, user[j].email, user[j].question, user[j].answer, user[j].nick_name);
-			}
+			// for(j=0;j<4;j++)
+			// {
+			// 	printf("저장된 아이디,비밀번호,휴대폰번호,이메일,질문,답변,닉네임: %s %s %s %s %s %s %s\n", user[j].id, user[j].pw, user[j].phone, user[j].email, user[j].question, user[j].answer, user[j].nick_name);
+			// }
 			user_cnt++;
 			
 			pthread_mutex_unlock(&mutx);
@@ -442,6 +442,7 @@ void * handle_clnt(void * arg)
 			}
 			
 		}
+
 	}
     //-----------------로그인,회원가입,아이디,비밀번호찾기 끝-------------------------
 	
@@ -451,6 +452,8 @@ void * handle_clnt(void * arg)
 	{
 		char *w_nick;
 		char *w_nick_msg;
+		char *s_nick;
+		char *s_msg;
 		char w_msg[BUF_SIZE+100];
 		// 귓속말
 		if(strncmp(msg, "/w", 2) == 0)
@@ -462,7 +465,7 @@ void * handle_clnt(void * arg)
 			
 			for(j=0; j<USER_NUM; j++)
 			{
-				if(strcmp(user[j].nick_name,w_nick) == 0)
+				if(strcmp(user[j].nick_name, w_nick) == 0)
 				{
 					// printf("소켓번호:%d\n",user[j].sock_num);
 					// printf("user닉:%s\n",user[j].nick_name);
@@ -471,9 +474,43 @@ void * handle_clnt(void * arg)
 					memset(msg, 0, sizeof(msg));
 					break;
 				}
+				
 			}
-
-		}	
+		}
+		// 회원 검색(아이디나 닉네임)
+		else if(strncmp(msg, "/s", 2) == 0)
+		{
+			strtok(msg, " ");
+			s_nick = strtok(NULL, "\n");
+			for(j=0; j<USER_NUM; j++)
+			{
+				if(strcmp(s_nick,user[j].nick_name) == 0 || strcmp(s_nick, user[j].id) == 0)
+				{
+					if(user[j].status == 1)
+					{
+						write(clnt_sock, "현재 접속중입니다.\n", strlen("현재 접속중입니다.\n"));
+						memset(msg, 0, sizeof(msg));
+						break;
+					}
+					else
+					{
+						write(clnt_sock, "미접속유저입니다\n", strlen("미접속유저입니다\n"));
+						memset(msg, 0, sizeof(msg));
+						break;
+					}	
+				}
+				else
+				{
+					if(strcmp(s_nick,user[j].nick_name) != 0 || strcmp(s_nick, user[j].id) != 0)
+					{
+						write(clnt_sock, "존재하지 않는 유저입니다\n", strlen("존재하지 않는 유저입니다\n"));
+						break;
+					}
+					
+				}
+				break;
+			}
+		}
 		// 닉네임+문자열
 		else
 		{
@@ -516,7 +553,7 @@ void send_msg(char * msg, int len)   // send to all
 	for(i=0; i<USER_NUM; i++)
 	{
 		// 로그인한 유저에게만 메세지전송
-		if(user[i].login == 1)
+		if(user[i].status == 1)
 		{
 			write(clnt_socks[i], msg, len);
 		}

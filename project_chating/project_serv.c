@@ -34,8 +34,9 @@ typedef struct User
 	char answer[100];
 	char nick_name[50];
 	int already;	// 회원가입하면 1
-	int login;	// 로그인하면 1
+	int status;	// 로그인하면 1	
 	int sock_num; // 소켓번호
+	char *whisper_box;	// 쪽지함
 
 } User;
 	// 구조체 변수 선언
@@ -101,8 +102,6 @@ void * handle_clnt(void * arg)
 	char nick[60];
 	
 	char msg[BUF_SIZE];
-	char login_msg[BUF_SIZE];
-
 	char id_msg[BUF_SIZE];
 	char pw_msg[BUF_SIZE];
 	char pw_chk[BUF_SIZE];
@@ -135,20 +134,20 @@ void * handle_clnt(void * arg)
 				chk = 0;
 				for(j=0; j<USER_NUM; j++)
 				{
-					if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].login == 1)
+					if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].status == 1)
 					{
 						write(clnt_sock, "이미 접속중인 아이디입니다\n", strlen("이미 접속중인 아이디입니다\n"));
 						chk = 1;
 						break;
 					}
-					else if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].login != 1)
+					else if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].status != 1)
 					{
 						write(clnt_sock, "로그인성공!\n채팅방에 오신것을 환영합니다\n", strlen("로그인성공!\n채팅방에 오신것을 환영합니다\n"));
-						user[j].login = 1;
+						user[j].status = 1;
 						strcpy(nick, user[j].nick_name);
 						user[j].sock_num = clnt_sock;
-						printf("소켓번호:%d\n", user[j].sock_num);
-						printf("로그인상태:%d\n", user[j].login);
+						// printf("소켓번호:%d\n", user[j].sock_num);
+						// printf("로그인상태:%d\n", user[j].status);
 						printf("아이디:%s\n", user[j].id);
 						break;
 					}
@@ -472,9 +471,8 @@ void * handle_clnt(void * arg)
 					break;
 				}
 			}
+		}
 
-		}	
-		
 		// 닉네임+문자열
 		else
 		{
@@ -517,7 +515,7 @@ void send_msg(char * msg, int len)   // send to all
 	for(i=0; i<USER_NUM; i++)
 	{
 		// 로그인한 유저에게만 메세지전송
-		if(user[i].login == 1)
+		if(user[i].status == 1)
 		{
 			write(clnt_socks[i], msg, len);
 		}
