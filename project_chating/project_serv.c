@@ -110,6 +110,7 @@ void * handle_clnt(void * arg)
 	char question_msg[BUF_SIZE];
 	char answer_msg[BUF_SIZE];
 	char nick_msg[BUF_SIZE+100];
+	char search_msg[BUF_SIZE];
 	char choice[] = {"번호를 선택해주세요\n1.로그인 2.회원가입 3.아이디찾기 4.비밀번호찾기\n"};
 
 	
@@ -142,7 +143,7 @@ void * handle_clnt(void * arg)
 					}
 					else if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].status != 1)
 					{
-						write(clnt_sock, "로그인성공!\n채팅방에 오신것을 환영합니다\n", strlen("로그인성공!\n채팅방에 오신것을 환영합니다\n"));
+						write(clnt_sock, "로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s) 귓속말(/w)\n", strlen("로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s) 귓속말(/w)\n"));
 						user[j].status = 1;
 						strcpy(nick, user[j].nick_name);
 						user[j].sock_num = clnt_sock;
@@ -333,10 +334,10 @@ void * handle_clnt(void * arg)
 			strcpy(user[user_cnt].answer, answer_msg);
 			strcpy(user[user_cnt].nick_name, nick_msg);
 			user[user_cnt].already = 1;
-			for(j=0;j<4;j++)
-			{
-				printf("저장된 아이디,비밀번호,휴대폰번호,이메일,질문,답변,닉네임: %s %s %s %s %s %s %s\n", user[j].id, user[j].pw, user[j].phone, user[j].email, user[j].question, user[j].answer, user[j].nick_name);
-			}
+			// for(j=0;j<4;j++)
+			// {
+			// 	printf("저장된 아이디,비밀번호,휴대폰번호,이메일,질문,답변,닉네임: %s %s %s %s %s %s %s\n", user[j].id, user[j].pw, user[j].phone, user[j].email, user[j].question, user[j].answer, user[j].nick_name);
+			// }
 			user_cnt++;
 			
 			pthread_mutex_unlock(&mutx);
@@ -441,6 +442,7 @@ void * handle_clnt(void * arg)
 			}
 			
 		}
+
 	}
     //-----------------로그인,회원가입,아이디,비밀번호찾기 끝-------------------------
 	
@@ -450,6 +452,8 @@ void * handle_clnt(void * arg)
 	{
 		char *w_nick;
 		char *w_nick_msg;
+		char *s_nick;
+		char *s_msg;
 		char w_msg[BUF_SIZE+100];
 		// 귓속말
 		if(strncmp(msg, "/w", 2) == 0)
@@ -458,21 +462,57 @@ void * handle_clnt(void * arg)
 			w_nick = strtok(NULL, " ");
 			w_nick_msg = strtok(NULL, "\n");
 			sprintf(w_msg, "%s[%s] %s%s\n", COLOR, nick, w_nick_msg, END);
-			
 			for(j=0; j<USER_NUM; j++)
 			{
-				if(strcmp(user[j].nick_name,w_nick) == 0)
+				if(strcmp(user[j].nick_name, w_nick) == 0)
 				{
 					// printf("소켓번호:%d\n",user[j].sock_num);
 					// printf("user닉:%s\n",user[j].nick_name);
 					write(user[j].sock_num, w_msg, sizeof(w_msg));
-					// printf("귓확인\n");
 					memset(msg, 0, sizeof(msg));
 					break;
 				}
+				else if(j == 99)
+				{
+					// printf("소켓번호:%d\n",user[j].sock_num);
+					// printf("user닉:%s\n",user[j].nick_name);
+					write(clnt_sock, "존재하지않거나 미접속중입니다.\n", strlen("존재하지않거나 미접속중입니다.\n"));
+					break;
+				}
 			}
+			
 		}
-
+		// 회원 검색(아이디나 닉네임)
+		else if(strncmp(msg, "/s", 2) == 0)
+		{
+			strtok(msg, " ");
+			s_nick = strtok(NULL, "\n");
+			for(j=0; j<USER_NUM; j++)
+			{
+				if(strcmp(s_nick,user[j].nick_name) == 0 || strcmp(s_nick, user[j].id) == 0)
+				{
+					if(user[j].status == 1)
+					{
+						write(clnt_sock, "현재 접속중입니다.\n", strlen("현재 접속중입니다.\n"));
+						memset(msg, 0, sizeof(msg));
+						break;
+					}
+					else
+					{
+						write(clnt_sock, "미접속유저입니다\n", strlen("미접속유저입니다\n"));
+						memset(msg, 0, sizeof(msg));
+						break;
+					}
+						
+				}
+				if(user[j].already == 0)
+				{
+					write(clnt_sock, "존재하지 않는 유저입니다\n", strlen("존재하지 않는 유저입니다\n"));
+					break;
+				}
+			}
+			
+		}
 		// 닉네임+문자열
 		else
 		{
@@ -481,16 +521,9 @@ void * handle_clnt(void * arg)
 			memset(msg, 0, sizeof(msg));
 			send_msg(nick_msg, strlen(nick_msg));
 		}
-		
-		
-		
-		
+
 	}
 		
-
-	
-
-
 
 	pthread_mutex_lock(&mutx);
 	for(i=0; i<clnt_cnt; i++)   // remove disconnected client
