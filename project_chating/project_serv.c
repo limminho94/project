@@ -40,12 +40,10 @@ typedef struct User
 
 } User;
 	// 구조체 변수 선언
-	User user[USER_NUM] = {{"id01","pw01","01012345678","email1","당신의 고향은","광주","멸치", 1, 0, 0},
-	{"id02","pw02","01012344678","email1","당신의 고향은","광주","고등어", 1, 0, 0},
-	{"id03","pw03","01012345688","email1","당신의 고향은","광주","명태", 1, 0, 0}};
+	User user[USER_NUM] = {{"id01","pw01","01012345678","email1","당신의 고향은","광주","멸치", 1, 0, 0}};
 	
 	// 회원가입 저장 변수 초기화
-	int user_cnt = 0;
+	int user_cnt = 1;
 
 // 메인 함수 실행
 int main(int argc, char *argv[])    // argc : argv[]의 개수 | argv[] 문자열의 주소를 저장하는 포인터배열
@@ -147,7 +145,7 @@ void * handle_clnt(void * arg)
 						user[j].status = 1;
 						strcpy(nick, user[j].nick_name);
 						user[j].sock_num = clnt_sock;
-						// printf("소켓번호:%d\n", user[j].sock_num);
+						printf("소켓번호:%d\n", user[j].sock_num);
 						// printf("로그인상태:%d\n", user[j].status);
 						printf("아이디:%s\n", user[j].id);
 						break;
@@ -334,15 +332,16 @@ void * handle_clnt(void * arg)
 			strcpy(user[user_cnt].answer, answer_msg);
 			strcpy(user[user_cnt].nick_name, nick_msg);
 			user[user_cnt].already = 1;
-			// for(j=0;j<4;j++)
-			// {
-			// 	printf("저장된 아이디,비밀번호,휴대폰번호,이메일,질문,답변,닉네임: %s %s %s %s %s %s %s\n", user[j].id, user[j].pw, user[j].phone, user[j].email, user[j].question, user[j].answer, user[j].nick_name);
-			// }
+			user[user_cnt].sock_num = clnt_sock;
+			for(j=0;j<2;j++)
+			{
+				printf("저장된 아이디,비밀번호,휴대폰번호,이메일,질문,답변,닉네임: %s %s %s %s %s %s %s\n", user[j].id, user[j].pw, user[j].phone, user[j].email, user[j].question, user[j].answer, user[j].nick_name);
+				printf("소켓번호:%d\n",user[j].sock_num);
+			}
 			user_cnt++;
-			
 			pthread_mutex_unlock(&mutx);
 			
-			continue;
+			
 		}
 		
 		// 3.아이디찾기
@@ -455,6 +454,7 @@ void * handle_clnt(void * arg)
 		char *s_nick;
 		char *s_msg;
 		char w_msg[BUF_SIZE+100];
+		
 		// 귓속말
 		if(strncmp(msg, "/w", 2) == 0)
 		{
@@ -464,24 +464,26 @@ void * handle_clnt(void * arg)
 			sprintf(w_msg, "%s[%s] %s%s\n", COLOR, nick, w_nick_msg, END);
 			for(j=0; j<USER_NUM; j++)
 			{
-				if(strcmp(user[j].nick_name, w_nick) == 0)
+				if(strcmp(user[j].nick_name, w_nick) == 0 && user[j].status == 1)
 				{
-					// printf("소켓번호:%d\n",user[j].sock_num);
-					// printf("user닉:%s\n",user[j].nick_name);
+					printf("j값:%d\n",j);
+					printf("소켓번호:%d\n",user[j].sock_num);
+					printf("user닉:%s\n",user[j].nick_name);
 					write(user[j].sock_num, w_msg, sizeof(w_msg));
 					memset(msg, 0, sizeof(msg));
 					break;
 				}
 				else if(j == 99)
 				{
-					// printf("소켓번호:%d\n",user[j].sock_num);
-					// printf("user닉:%s\n",user[j].nick_name);
+					printf("소켓번호:%d\n",user[j].sock_num);
+					printf("user닉:%s\n",user[j].nick_name);
 					write(clnt_sock, "존재하지않거나 미접속중입니다.\n", strlen("존재하지않거나 미접속중입니다.\n"));
 					break;
 				}
 			}
 			
 		}
+		
 		// 회원 검색(아이디나 닉네임)
 		else if(strncmp(msg, "/s", 2) == 0)
 		{
@@ -499,7 +501,7 @@ void * handle_clnt(void * arg)
 					}
 					else
 					{
-						write(clnt_sock, "미접속유저입니다\n", strlen("미접속유저입니다\n"));
+						write(clnt_sock, "미접속 회원입니다\n", strlen("미접속 회원입니다\n"));
 						memset(msg, 0, sizeof(msg));
 						break;
 					}
@@ -507,21 +509,22 @@ void * handle_clnt(void * arg)
 				}
 				if(user[j].already == 0)
 				{
-					write(clnt_sock, "존재하지 않는 유저입니다\n", strlen("존재하지 않는 유저입니다\n"));
+					write(clnt_sock, "존재하지 않는 회원입니다\n", strlen("존재하지 않는 회원입니다\n"));
 					break;
 				}
 			}
 			
 		}
-		// 닉네임+문자열
+		// 닉네임+문자열 전체 문자
 		else
 		{
+			printf("전체문자확인용?\n");
 			sprintf(nick_msg ,"[%s] %s", nick, msg);
 			// msg 버퍼 지우기
 			memset(msg, 0, sizeof(msg));
 			send_msg(nick_msg, strlen(nick_msg));
 		}
-
+		
 	}
 		
 
