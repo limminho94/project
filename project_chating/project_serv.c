@@ -36,14 +36,16 @@ typedef struct User
 	int already;	// 회원가입하면 1
 	int status;	// 로그인하면 1	
 	int sock_num; // 소켓번호
-	char *whisper_box;	// 쪽지함
-
-} User;
-	// 구조체 변수 선언
-	User user[USER_NUM] = {{"id01","pw01","01012345678","email1","당신의 고향은","광주","멸치", 1, 0, 0}};
+	int room; // 채팅방
+	char whisperbox[5][BUF_SIZE];
 	
-	// 회원가입 저장 변수 초기화
-	int user_cnt = 1;
+} User;
+
+// 구조체 변수 선언
+User user[USER_NUM] = {{"id01","pw01","01012345678","email1","당신의 고향은","광주","멸치", 1, 0, 0}};
+
+// 회원가입 저장 변수 초기화
+int user_cnt = 1;
 
 // 메인 함수 실행
 int main(int argc, char *argv[])    // argc : argv[]의 개수 | argv[] 문자열의 주소를 저장하는 포인터배열
@@ -141,7 +143,7 @@ void * handle_clnt(void * arg)
 					}
 					else if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].status != 1)
 					{
-						write(clnt_sock, "로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s) 귓속말(/w)\n", strlen("로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s) 귓속말(/w)\n"));
+						write(clnt_sock, "로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s 아이디 or 닉네임) 귓속말(/w 닉네임) 쪽지함(/b )\n", strlen("로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s 아이디 or 닉네임) 귓속말(/w 닉네임) 쪽지함(/b )\n"));
 						user[j].status = 1;
 						strcpy(nick, user[j].nick_name);
 						user[j].sock_num = clnt_sock;
@@ -385,7 +387,7 @@ void * handle_clnt(void * arg)
 				write(clnt_sock, "아이디를 입력하세요\n", strlen("아이디를 입력하세요\n"));
 				str_len=read(clnt_sock, id_msg, sizeof(id_msg));
 				id_msg[str_len-1] = '\0';
-				chk = 0;
+				chk = 0; // flag
 				for(j=0; j <USER_NUM; j++)
 				{	
 					if(strcmp(id_msg, user[j].id) == 0)
@@ -453,6 +455,8 @@ void * handle_clnt(void * arg)
 		char *w_nick_msg;
 		char *s_nick;
 		char *s_msg;
+		char *b_nick;
+		char *b_msg;
 		char w_msg[BUF_SIZE+100];
 		
 		// 귓속말
@@ -462,8 +466,10 @@ void * handle_clnt(void * arg)
 			w_nick = strtok(NULL, " ");
 			w_nick_msg = strtok(NULL, "\n");
 			sprintf(w_msg, "%s[%s] %s%s\n", COLOR, nick, w_nick_msg, END);
+			
 			for(j=0; j<USER_NUM; j++)
 			{
+				chk = 0;
 				if(strcmp(user[j].nick_name, w_nick) == 0 && user[j].status == 1)
 				{
 					printf("j값:%d\n",j);
@@ -473,15 +479,42 @@ void * handle_clnt(void * arg)
 					memset(msg, 0, sizeof(msg));
 					break;
 				}
-				else if(j == 99)
+				else if(strcmp(user[j].nick_name, w_nick) == 0 && user[j].status == 0)
 				{
 					printf("소켓번호:%d\n",user[j].sock_num);
 					printf("user닉:%s\n",user[j].nick_name);
-					write(clnt_sock, "존재하지않거나 미접속중입니다.\n", strlen("존재하지않거나 미접속중입니다.\n"));
+					if(strcmp(user[j].nick_name, w_nick) == 0)
+					{
+						for(int k=0; k<5; k++)
+						{
+							if(strcmp(user[j].whisperbox[k], "\0") == 0)
+							{
+								strcpy(user[j].whisperbox[k], w_msg);
+								memset(msg, 0, sizeof(msg));
+								printf("쪽지함내용:%s", user[j].whisperbox[k]);
+								break;
+							}
+							else if(k == 4)
+							{
+								write(clnt_sock, "상대방의 쪽지함이 가득찼습니다\n", strlen("상대방의 쪽지함이 가득찼습니다\n"));
+								chk = 1;
+								break;
+							}
+							
+						}
+						if(chk == 1)
+						{
+							break;
+						}
+					}
+					write(clnt_sock, "미접속중입니다.쪽지함으로 저장합니다\n", strlen("미접속중입니다.쪽지함으로 저장합니다\n"));
 					break;
 				}
+				else if(j == 99)
+				{
+					write(clnt_sock, "존재하지 않는 회원입니다\n", strlen("존재하지 않는 회원입니다\n"));
+				}
 			}
-			
 		}
 		
 		// 회원 검색(아이디나 닉네임)
@@ -515,10 +548,103 @@ void * handle_clnt(void * arg)
 			}
 			
 		}
+		// 쪽지함
+		else if(strncmp(msg, "/b", 2) == 0)
+		{
+			// printf("clnt_sock:%d\n",clnt_sock);
+			// printf("유저소켓:%d\n", user[j].sock_num);
+			printf("쪽지함출력확인\n");
+			
+			strtok(msg, " ");
+			b_nick = strtok(NULL, "\n");
+			for(j=0; j<USER_NUM; j++)
+			{
+				if(clnt_sock == user[j].sock_num)
+				{
+					printf("clnt_sock:%d\n",clnt_sock);
+					printf("유저소켓:%d\n", user[j].sock_num);
+					for(int k=0; k<5; k++)
+					{
+						if(strcmp(user[j].whisperbox[k] ,"\0") == 0)
+						{
+							printf("빈쪽지함 확인\n");
+							usleep(100000);
+							// write(user[j].sock_num, num_msg, strlen(num_msg));
+							write(user[j].sock_num, "쪽지함이 비었습니다\n", strlen("쪽지함이 비었습니다\n"));
+							// memset(w_msg, 0, sizeof(w_msg));
+							
+						}
+						else
+						{
+							usleep(100000);
+							printf("내용:%s",user[j].whisperbox[k]);
+							// write(user[j].sock_num, num_msg, strlen(num_msg));
+							write(user[j].sock_num, user[j].whisperbox[k], strlen(user[j].whisperbox[k]));
+							// memset(w_msg, 0, sizeof(w_msg));
+			
+						}
+					}
+					break;
+				}
+				// else if(j == 99)
+				// {
+				// 	write(clnt_sock, "닉네임이 맞지않습니다.다시 입력해주세요\n", strlen("닉네임이 맞지않습니다.다시 입력해주세요\n"));
+				// 	break;
+				// }
+			}
+			// 쪽지함 삭제
+			write(clnt_sock, "삭제하실 문자를 선택하세요 1~5번 없으면 0번\n", strlen("삭제하실 문자를 선택하세요 1~5번 없으면 0번\n"));
+			str_len = read(clnt_sock, msg, sizeof(msg));
+			msg[str_len-1] = '\0';
+			for(j=0; j<USER_NUM; j++)
+			{
+				if(clnt_sock == user[j].sock_num)
+				{
+					if(strcmp(msg, "0") == 0)
+					{
+						write(clnt_sock, "쪽지함을 종료합니다\n", strlen("쪽지함을 종료합니다\n"));
+						
+					}
+					else if(strcmp(msg, "1") == 0)
+					{
+						strcpy(user[j].whisperbox[0], "\0");
+						write(clnt_sock, "삭제완료\n", strlen("삭제완료\n"));
+						break;
+					}
+					else if(strcmp(msg, "2") == 0)
+					{
+						strcpy(user[j].whisperbox[1], "\0");
+						write(clnt_sock, "삭제완료\n", strlen("삭제완료\n"));
+						break;
+					}
+					else if(strcmp(msg, "3") == 0)
+					{
+						strcpy(user[j].whisperbox[2], "\0");
+						write(clnt_sock, "삭제완료\n", strlen("삭제완료\n"));
+						break;
+					}
+					else if(strcmp(msg, "4") == 0)
+					{
+						strcpy(user[j].whisperbox[3], "\0");
+						write(clnt_sock, "삭제완료\n", strlen("삭제완료\n"));
+						break;
+					}
+					else if(strcmp(msg, "5") == 0)
+					{
+						strcpy(user[j].whisperbox[4], "\0");
+						write(clnt_sock, "삭제완료\n", strlen("삭제완료\n"));
+						break;
+					}
+				}
+				
+			}
+			
+		}
+
 		// 닉네임+문자열 전체 문자
 		else
 		{
-			printf("전체문자확인용?\n");
+			printf("전체문자확인용\n");
 			sprintf(nick_msg ,"[%s] %s", nick, msg);
 			// msg 버퍼 지우기
 			memset(msg, 0, sizeof(msg));
