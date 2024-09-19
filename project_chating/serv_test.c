@@ -15,7 +15,7 @@
 
 // 함수 헤더 선언
 void * handle_clnt(void * arg);
-void send_msg(char * msg, int len);
+void send_msg(char * msg, int len, int bb);
 void error_handling(char * msg);
 
 // 전역 변수 선언
@@ -199,6 +199,7 @@ void * handle_clnt(void * arg)
 				}
 				break;
 	
+
 			}
 			
 			// 비밀번호
@@ -658,31 +659,48 @@ void * handle_clnt(void * arg)
 		// 채팅방 초대
 		else if(strncmp(msg, "/in", 3) == 0)
 		{
+			strtok(msg, " ");
+			in_nick = strtok(NULL, " ");
+			in_nick_num = strtok(NULL, "\n");
+			sprintf(in_msg, "[%s]번방에 초대받으셨습니다 1.입장 2.거절\n", in_nick_num);
+			chk= 0;
 			for(j=0; j<USER_NUM; j++)
 			{
-				printf("clnt_sock:%d\n",clnt_sock);
-				printf("유저소켓:%d\n", user[j].sock_num);
-				strtok(msg, " ");
-				in_nick = strtok(NULL, " ");
-				in_nick_num = strtok(NULL, "\n");
-				sprintf(in_msg, "[%s]님이 [%s]번방에 초대하셨습니다 1.입장 2.거절\n", in_nick, in_nick_num);
-				if(in_nick == user[j].nick_name)
+				printf("in_nick:%s\n", in_nick);
+				printf("유저닉:%s\n", user[j].nick_name);
+				if(strcmp(in_nick,user[j].nick_name) == 0 && user[j].status == 1)
 				{
-					
+					chk = 1;
+					printf("확인\n");
 					write(user[j].sock_num, in_msg, sizeof(in_msg));
-					memset(msg, 0, sizeof(msg));
-					// if()
-					printf("초대성공\n");
+					str_len = read(user[j].sock_num, msg, sizeof(msg));
+					msg[str_len-1] = '\0';
+					printf("msg:%s\n", msg);
+					if(strcmp(msg, "1") == 0)
+					{
+						write(user[j].sock_num, "채팅방 입장\n", strlen("채팅방 입장\n"));
+						user[j].room = atoi(in_nick_num);
+						printf("유저룸번호:%d\n",user[j].room);
+						if(user[j].room == atoi(in_nick_num))
+						{
+							// send_msg(nick_msg, strlen(nick_msg));
+						}
+						
+					}
+					else
+					{
+						write(user[j].sock_num, "거절하셨습니다.메인채팅방으로 돌아갑니다\n", strlen("거절하셨습니다.메인채팅방으로 돌아갑니다\n"));
+						break;
+					}
+			
 				}
-				// else
+				// else if(j == 99)
 				// {
-				// 	printf("틀림1\n");
 				// 	write(clnt_sock, "미접속중이거나 존재하지않는 닉네임입니다\n", strlen("미접속중이거나 존재하지않는 닉네임입니다\n"));
-				// 	break;
+					
 				// }
 			}
-			
-		
+
 		}
 		// 닉네임+문자열 전체 문자
 		else
@@ -690,7 +708,7 @@ void * handle_clnt(void * arg)
 			sprintf(nick_msg ,"[%s] %s", nick, msg);
 			// msg 버퍼 지우기
 			memset(msg, 0, sizeof(msg));
-			send_msg(nick_msg, strlen(nick_msg));
+			send_msg(nick_msg, strlen(nick_msg),clnt_sock);
 		}
 		
 	}
@@ -712,19 +730,28 @@ void * handle_clnt(void * arg)
 	return NULL;
 }
 // 메세지 전송 함수
-void send_msg(char * msg, int len)   // send to all
+void send_msg(char * msg, int len, int bb)   // send to all
 {
-	int i;
+	int i,j, num;
 	pthread_mutex_lock(&mutx);
 	for(i=0; i<USER_NUM; i++)
 	{
-		// 로그인한 유저에게만 메세지전송
-		if(user[i].status == 1)
+		if(user[i].sock_num == bb)
 		{
-			write(clnt_socks[i], msg, len);
+			num = user[i].room;
+		}
+		
+	}
+	for(j=0; j<USER_NUM; j++)
+	{
+		if(num == user[j].room)
+		{
+			printf("되나?\n");
+			write(user[j].sock_num, msg, len);
 		}
 	}
 	pthread_mutex_unlock(&mutx);
+	
 }
 // 에러 표시?함수
 void error_handling(char * msg)
