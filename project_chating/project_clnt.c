@@ -7,13 +7,13 @@
 #include <pthread.h>
 	
 #define BUF_SIZE 100
-
+// #define NAME_SIZE 20
 // 함수 헤더 선언
 void * send_msg(void * arg);
 void * recv_msg(void * arg);
 void error_handling(char * msg);
 // 지역변수 선언
-
+// char name[NAME_SIZE]="[DEFAULT]";
 char msg[BUF_SIZE];
 // 메인함수 실행
 int main(int argc, char *argv[])    // argc argv[]의 인자 개수 | argv[] 문자열의 주소를 저장하는 포인터배열
@@ -25,8 +25,9 @@ int main(int argc, char *argv[])    // argc argv[]의 인자 개수 | argv[] 문
 	if(argc!=3) {
 		printf("Usage : %s <IP> <port>\n", argv[0]);
 		exit(1);
-	}
-	
+	 }
+	// 문자열 출력
+	// sprintf(name, "[%s]", argv[3]);
     // 클라이언트 소켓 생성
 	sock=socket(PF_INET, SOCK_STREAM, 0);
 	// 주소정보 초기화
@@ -49,7 +50,7 @@ int main(int argc, char *argv[])    // argc argv[]의 인자 개수 | argv[] 문
 void * send_msg(void * arg)   // send thread main
 {
 	int sock=*((int*)arg);
-
+	
 	while(1) 
 	{
 		fgets(msg, BUF_SIZE, stdin);
@@ -58,7 +59,8 @@ void * send_msg(void * arg)   // send thread main
 			close(sock);
 			exit(0);
 		}
-		
+		// sprintf(name_msg,"%s %s", name, msg);
+		write(sock, msg, strlen(msg));
 	}
 	return NULL;
 }

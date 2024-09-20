@@ -15,7 +15,7 @@
 
 // 함수 헤더 선언
 void * handle_clnt(void * arg);
-void send_msg(char * msg, int len);
+void send_msg(char * msg, int len, int cs);
 void error_handling(char * msg);
 
 // 전역 변수 선언
@@ -42,7 +42,7 @@ typedef struct User
 } User;
 
 // 구조체 변수 선언
-User user[USER_NUM] = {{"id01","pw01","01012345678","email1","당신의 고향은","광주","멸치", 1, 0, 0}};
+User user[USER_NUM] = {{"id01","pw01","01012345678","email1","당신의 고향은","광주","멸치", 1, 0, 0, 4}};
 
 // 회원가입 저장 변수 초기화
 int user_cnt = 1;
@@ -111,7 +111,7 @@ void * handle_clnt(void * arg)
 	char answer_msg[BUF_SIZE];
 	char nick_msg[BUF_SIZE+100];
 	char search_msg[BUF_SIZE];
-	char choice[] = {"번호를 선택해주세요\n1.로그인 2.회원가입 3.아이디찾기 4.비밀번호찾기\n"};
+	char choice[] = {"번호를 선택해주세요\n1.로그인 2.회원가입 3.아이디찾기 4.비밀번호찾기 5.회원탈퇴\n"};
 
 	
 	while(1)
@@ -141,15 +141,21 @@ void * handle_clnt(void * arg)
 						chk = 1;
 						break;
 					}
-					else if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].status != 1)
+					else if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].status == 0)
 					{
-						write(clnt_sock, "로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s 아이디 or 닉네임) 귓속말(/w 닉네임) 쪽지함(/b )\n", strlen("로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s 아이디 or 닉네임) 귓속말(/w 닉네임) 쪽지함(/b )\n"));
+						write(clnt_sock, "로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s 아이디 or 닉네임) 귓속말(/w 닉네임) 쪽지함(/b) 채팅방초대(/in 닉네임 방번호)\n", strlen("로그인성공!\n채팅방에 오신것을 환영합니다\n회원검색(/s 아이디 or 닉네임) 귓속말(/w 닉네임) 쪽지함(/b) 채팅방초대(/in 닉네임 방번호)\n"));
 						user[j].status = 1;
 						strcpy(nick, user[j].nick_name);
 						user[j].sock_num = clnt_sock;
-						printf("소켓번호:%d\n", user[j].sock_num);
+						// printf("소켓번호:%d\n", user[j].sock_num);
 						// printf("로그인상태:%d\n", user[j].status);
-						printf("아이디:%s\n", user[j].id);
+						// printf("아이디:%s\n", user[j].id);
+						break;
+					}
+					else if(strcmp(id_msg,user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0 && user[j].status == 3)
+					{
+						write(clnt_sock, "탈퇴한 회원입니다.\n", strlen("탈퇴한 회원입니다.\n"));
+						chk = 1;
 						break;
 					}
 					else if(j == 99)
@@ -159,11 +165,12 @@ void * handle_clnt(void * arg)
 						break;
 					}
 				}
-				if(chk == 1)
-				{
-					continue;
-				}
+				
 				break;
+			}
+			if(chk == 1)
+			{
+				continue;
 			}
 			break;
 		}
@@ -199,6 +206,7 @@ void * handle_clnt(void * arg)
 				}
 				break;
 	
+
 			}
 			
 			// 비밀번호
@@ -335,11 +343,11 @@ void * handle_clnt(void * arg)
 			strcpy(user[user_cnt].nick_name, nick_msg);
 			user[user_cnt].already = 1;
 			user[user_cnt].sock_num = clnt_sock;
-			for(j=0;j<2;j++)
-			{
-				printf("저장된 아이디,비밀번호,휴대폰번호,이메일,질문,답변,닉네임: %s %s %s %s %s %s %s\n", user[j].id, user[j].pw, user[j].phone, user[j].email, user[j].question, user[j].answer, user[j].nick_name);
-				printf("소켓번호:%d\n",user[j].sock_num);
-			}
+			// for(j=0;j<2;j++)
+			// {
+			// 	printf("저장된 아이디,비밀번호,휴대폰번호,이메일,질문,답변,닉네임: %s %s %s %s %s %s %s\n", user[j].id, user[j].pw, user[j].phone, user[j].email, user[j].question, user[j].answer, user[j].nick_name);
+			// 	printf("소켓번호:%d\n",user[j].sock_num);
+			// }
 			user_cnt++;
 			pthread_mutex_unlock(&mutx);
 			
@@ -443,9 +451,46 @@ void * handle_clnt(void * arg)
 			}
 			
 		}
+		// 회원 탈퇴
+		else if(strcmp(msg,"5") == 0)
+		{
+			write(clnt_sock, "아이디를 입력하세요\n", strlen("아이디를 입력하세요\n"));
+			(str_len=read(clnt_sock, id_msg, sizeof(id_msg)));
+			id_msg[str_len-1] = '\0';
+			write(clnt_sock, "비밀번호를 입력하세요\n", strlen("비밀번호를 입력하세요\n"));
+			(str_len=read(clnt_sock, pw_msg, sizeof(pw_msg)));
+			pw_msg[str_len-1] = '\0';
+			for(j=0; j<USER_NUM; j++)
+			{
+				if(strcmp(id_msg, user[j].id) == 0 && strcmp(pw_msg, user[j].pw) == 0)
+				{
+					write(clnt_sock, "탈퇴되었습니다\n", strlen("탈퇴되었습니다\n"));
+					user[j].status = 3;
+					break;
+				}
+				else if(j == 99)
+				{
+					write(clnt_sock, "아이디나 비밀번호가 틀렸습니다.다시 입력해주세요\n", strlen("아이디나 비밀번호가 틀렸습니다.다시 입력해주세요\n"));
+					break;
+				}
+				
+			}
+		}
+		else if(strcmp(msg, "q") == 0)
+		{
+			for(j=0; j<USER_NUM; j++)
+			{
+				if(clnt_sock == user[j].sock_num)
+				{
+					user[j].status = 0;
+					printf("유저상태:%d\n", user[j].status);
+				}
+				
+			}
+		}
 
 	}
-    //-----------------로그인,회원가입,아이디,비밀번호찾기 끝-------------------------
+    //-----------------로그인,회원가입,아이디,비밀번호찾기,회원탈퇴 끝-------------------------
 	
 
 	//-----------------------메인채팅방----------------------------------
@@ -457,7 +502,11 @@ void * handle_clnt(void * arg)
 		char *s_msg;
 		char *b_nick;
 		char *b_msg;
+		char *in_nick;
+		char in_msg[BUF_SIZE];
+		char *in_nick_num;
 		char w_msg[BUF_SIZE+100];
+		int room_num;
 		
 		// 귓속말
 		if(strncmp(msg, "/w", 2) == 0)
@@ -540,13 +589,13 @@ void * handle_clnt(void * arg)
 					}
 						
 				}
-				if(user[j].already == 0)
+				if(user[j].already == 0 || user[j].status == 3)
 				{
 					write(clnt_sock, "존재하지 않는 회원입니다\n", strlen("존재하지 않는 회원입니다\n"));
 					break;
 				}
 			}
-			
+			memset(msg,0,sizeof(msg));
 		}
 		// 쪽지함
 		else if(strncmp(msg, "/b", 2) == 0)
@@ -561,13 +610,13 @@ void * handle_clnt(void * arg)
 			{
 				if(clnt_sock == user[j].sock_num)
 				{
-					printf("clnt_sock:%d\n",clnt_sock);
-					printf("유저소켓:%d\n", user[j].sock_num);
+					// printf("clnt_sock:%d\n",clnt_sock);
+					// printf("유저소켓:%d\n", user[j].sock_num);
 					for(int k=0; k<5; k++)
 					{
 						if(strcmp(user[j].whisperbox[k] ,"\0") == 0)
 						{
-							printf("빈쪽지함 확인\n");
+							// printf("빈쪽지함 확인\n");
 							usleep(100000);
 							// write(user[j].sock_num, num_msg, strlen(num_msg));
 							write(user[j].sock_num, "쪽지함이 비었습니다\n", strlen("쪽지함이 비었습니다\n"));
@@ -577,7 +626,7 @@ void * handle_clnt(void * arg)
 						else
 						{
 							usleep(100000);
-							printf("내용:%s",user[j].whisperbox[k]);
+							// printf("내용:%s",user[j].whisperbox[k]);
 							// write(user[j].sock_num, num_msg, strlen(num_msg));
 							write(user[j].sock_num, user[j].whisperbox[k], strlen(user[j].whisperbox[k]));
 							// memset(w_msg, 0, sizeof(w_msg));
@@ -592,6 +641,7 @@ void * handle_clnt(void * arg)
 				// 	break;
 				// }
 			}
+
 			// 쪽지함 삭제
 			write(clnt_sock, "삭제하실 문자를 선택하세요 1~5번 없으면 0번\n", strlen("삭제하실 문자를 선택하세요 1~5번 없으면 0번\n"));
 			str_len = read(clnt_sock, msg, sizeof(msg));
@@ -638,17 +688,80 @@ void * handle_clnt(void * arg)
 				}
 				
 			}
+			memset(msg,0,sizeof(msg));
 			
 		}
-
+		// 채팅방 초대
+		else if(strncmp(msg, "/in", 3) == 0)
+		{
+			strtok(msg, " ");
+			in_nick = strtok(NULL, " ");
+			in_nick_num = strtok(NULL, "\0");
+			room_num = atoi(in_nick_num);
+			sprintf(in_msg, "[%d]번방에 초대받으셨습니다 1.입장 2.거절\n", room_num);
+			
+			for(j=0; j<USER_NUM; j++)
+			{
+				// printf("in_nick:%s\n", in_nick);
+				// printf("유저닉:%s\n", user[j].nick_name);
+				if(strcmp(in_nick,user[j].nick_name) == 0 && user[j].status == 1)
+				{
+					// printf("확인\n");
+					write(user[j].sock_num, in_msg, sizeof(in_msg));
+					str_len = read(user[j].sock_num, msg, sizeof(msg));
+					msg[str_len-1] = '\0';
+					// printf("msg:%s\n", msg);
+					if(strcmp(msg, "1") == 0)
+					{
+						user[j].room = atoi(in_nick_num);
+						
+						write(user[j].sock_num, "채팅방 입장하셨습니다 나가려면 /out\n", strlen("채팅방 입장하셨습니다 나가려면 /out\n"));
+						break;
+					}
+					else
+					{
+						write(user[j].sock_num, "거절하셨습니다.메인채팅방으로 돌아갑니다\n", strlen("거절하셨습니다.메인채팅방으로 돌아갑니다\n"));
+						break;
+					}
+			
+				}
+				else if(user[j].already == 0)
+				{
+					write(user[j].sock_num, "존재하지않는 회원입니다\n", strlen("존재하지않는 회원입니다\n"));
+					break;
+				}
+				else if(strcmp(in_nick,user[j].nick_name) == 0 && user[j].status == 0)
+				{
+					write(user[j].sock_num, "미접속 회원입니다\n", strlen("미접속 회원입니다\n"));
+					break;
+				}
+			}
+			memset(msg,0,sizeof(msg));
+		}
+		// 채팅방 나가기
+		else if(strncmp(msg, "/out", 4) == 0)
+		{
+			strtok(msg, " ");
+			for(j=0; j<USER_NUM; j++)
+			{
+				if(clnt_sock == user[j].sock_num)
+				{
+					write(user[j].sock_num, "채팅방을 나갑니다\n", strlen("채팅방을 나갑니다\n"));
+					user[j].room = 0;
+					// printf("유저룸:%d\n", user[j].room);
+					break;
+				}
+				
+			}
+			memset(msg,0,sizeof(msg));
+		}
 		// 닉네임+문자열 전체 문자
 		else
 		{
-			printf("전체문자확인용\n");
 			sprintf(nick_msg ,"[%s] %s", nick, msg);
 			// msg 버퍼 지우기
 			memset(msg, 0, sizeof(msg));
-			send_msg(nick_msg, strlen(nick_msg));
+			send_msg(nick_msg, strlen(nick_msg),clnt_sock);
 		}
 		
 	}
@@ -670,19 +783,28 @@ void * handle_clnt(void * arg)
 	return NULL;
 }
 // 메세지 전송 함수
-void send_msg(char * msg, int len)   // send to all
+void send_msg(char * msg, int len, int cs)   // send to all
 {
-	int i;
+	int i,j, num;
 	pthread_mutex_lock(&mutx);
 	for(i=0; i<USER_NUM; i++)
 	{
-		// 로그인한 유저에게만 메세지전송
-		if(user[i].status == 1)
+		if(user[i].sock_num == cs)
 		{
-			write(clnt_socks[i], msg, len);
+			num = user[i].room;
 		}
+		
+	}
+	for(j=0; j<USER_NUM; j++)
+	{
+		if(num == user[j].room && user[j].status == 1)
+		{
+			write(user[j].sock_num, msg, len);
+		}
+		
 	}
 	pthread_mutex_unlock(&mutx);
+	
 }
 // 에러 표시?함수
 void error_handling(char * msg)
