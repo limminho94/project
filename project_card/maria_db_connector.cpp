@@ -82,15 +82,15 @@ bool MariaDBConnector::query(const char *query_content)
                 unsigned int col_nums = res->getMetaData()->getColumnCount();
                 std::ostringstream output_stream;
 
-                // Iterate through rows and store values
+                // 행을 반복해서 값을 저장           
                 while (res->next())  // 첫 번째 행부터 출력되도록 수정
                 {
                     for (int i = 1; i <= col_nums; ++i)
                     {
                         output_stream << res->getString(i);
-                        if (i != col_nums)  // 마지막 컬럼이 아닐 때만 공백 추가
+                        if (i != col_nums)  // 마지막 컬럼이 아닐 때만 언더바 추가
                         {
-                            output_stream;
+                            output_stream << "_";
                         }
                     }
                     output_stream << std::endl;  // 각 행 끝에 줄바꿈 추가
