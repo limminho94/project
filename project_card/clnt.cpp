@@ -10,15 +10,25 @@
 #include <sstream>
 #include <vector>
 #define RED "\033[31m"
+#define RED_BOLD "\033[1;31m"
 #define ORANGE "\033[38;5;214m"
+#define ORANGE_BOLD "\033[1;38;5;214m"
 #define YELLOW "\033[33m"
+#define YELLOW_BOLD "\033[1;33m"
 #define GREEN "\033[32m"
+#define GREEN_BOLD "\033[1;32m"
 #define BLUE "\033[34m"
+#define BLUE_BOLD "\033[1;34m"
 #define PURPLE "\033[35m"
+#define PURPLE_BOLD "\033[1;35m"
 #define PINK "\033[38;5;213m"
+#define PINK_BOLD "\033[1;38;5;213m"
 #define BROWN "\033[38;5;130m"
+#define BROWN_BOLD "\033[1;38;5;130m"
 #define LBLUE "\033[38;5;153m" // 연한 파란색
+#define LBLUE_BOLD "\033[1;38;5;153m"
 #define LGREEN "\033[38;5;154m" // 연한 초록색
+#define LGREEN_BOLD "\033[1;38;5;154m" // 연한 초록색
 #define END "\033[0m"
 
 
@@ -62,85 +72,85 @@ public:
     {
         if(company.compare("KB국민카드") == 0)
         {
-            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE << name <<END << '\t'
-                << YELLOW << company << END << '\n'
-                << BROWN << "["  << benetype1 
+            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE_BOLD << name <<END << '\t'
+                << YELLOW_BOLD << company << END << '\n'
+                << BROWN_BOLD << "["  << benetype1 
                 << "] " << bene1  << '\t'
                 << " [" << benetype2 
                 << "] " << bene2 << END << '\n'
-                << LGREEN << "연회비 " << '\t'
+                << LGREEN_BOLD << "연회비 " << '\t'
                 <<  annualFee << END <<'\t'
-                << LBLUE << " 전월실적 " << '\t'
+                << LBLUE_BOLD << " 전월실적 " << '\t'
                 << preMonSpending << END << "\n-----------------------------------------------------------------------------------------------\n" 
                 << std::endl;
         }
         else if(company.compare("신한카드") == 0)
         {
-            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE << name <<END << '\t'
-                << BLUE << company << END << '\n'
-                << BROWN << "["  << benetype1 
+            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE_BOLD << name <<END << '\t'
+                << BLUE_BOLD << company << END << '\n'
+                << BROWN_BOLD << "["  << benetype1 
                 << "] " << bene1  << '\t'
                 << " [" << benetype2 
                 << "] " << bene2 << END << '\n'
-                << LGREEN << "연회비 " << '\t'
+                << LGREEN_BOLD << "연회비 " << '\t'
                 <<  annualFee << END <<'\t'
-                << LBLUE << " 전월실적 " << '\t'
+                << LBLUE_BOLD << " 전월실적 " << '\t'
                 << preMonSpending << END << "\n-----------------------------------------------------------------------------------------------\n" 
                 << std::endl;
         }
         else if(company.compare("롯데카드") == 0)
         {
-            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE << name <<END << '\t'
-                << RED << company << END << '\n'
-                << BROWN << "["  << benetype1 
+            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE_BOLD << name <<END << '\t'
+                << RED_BOLD << company << END << '\n'
+                << BROWN_BOLD << "["  << benetype1 
                 << "] " << bene1  << '\t'
                 << " [" << benetype2 
                 << "] " << bene2 << END << '\n'
-                << LGREEN << "연회비 " << '\t'
+                << LGREEN_BOLD << "연회비 " << '\t'
                 <<  annualFee << END <<'\t'
-                << LBLUE << " 전월실적 " << '\t'
+                << LBLUE_BOLD << " 전월실적 " << '\t'
                 << preMonSpending << END << "\n-----------------------------------------------------------------------------------------------\n" 
                 << std::endl;
         }
         else if(company.compare("삼성카드") == 0)
         {
-            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE << name <<END << '\t'
-                <<  PINK << company << END << '\n'
-                << BROWN << "["  << benetype1 
+            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE_BOLD << name <<END << '\t'
+                << PINK_BOLD << company << END << '\n'
+                << BROWN_BOLD << "["  << benetype1 
                 << "] " << bene1  << '\t'
                 << " [" << benetype2 
                 << "] " << bene2 << END << '\n'
-                << LGREEN << "연회비 " << '\t'
+                << LGREEN_BOLD << "연회비 " << '\t'
                 <<  annualFee << END <<'\t'
-                << LBLUE << " 전월실적 " << '\t'
+                << LBLUE_BOLD << " 전월실적 " << '\t'
                 << preMonSpending << END << "\n-----------------------------------------------------------------------------------------------\n" 
                 << std::endl;
         }
         else if(company.compare("우리카드") == 0)
         {
-            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE << name <<END << '\t'
-                <<  ORANGE << company << END << '\n'
-                << BROWN << "["  << benetype1 
+            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE_BOLD << name <<END << '\t'
+                << ORANGE_BOLD << company << END << '\n'
+                << BROWN_BOLD << "["  << benetype1 
                 << "] " << bene1  << '\t'
                 << " [" << benetype2 
                 << "] " << bene2 << END << '\n'
-                << LGREEN << "연회비 " << '\t'
+                << LGREEN_BOLD << "연회비 " << '\t'
                 <<  annualFee << END <<'\t'
-                << LBLUE << " 전월실적 " << '\t'
+                << LBLUE_BOLD << " 전월실적 " << '\t'
                 << preMonSpending << END << "\n-----------------------------------------------------------------------------------------------\n" 
                 << std::endl;
         }
         else if(company.compare("하나카드") == 0)
         {
-            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE << name <<END << '\t'
-                <<  GREEN << company << END << '\n'
-                << BROWN << "["  << benetype1 
+            std::cout << "\n-----------------------------------------------------------------------------------------------\n" << PURPLE_BOLD << name <<END << '\t'
+                << GREEN_BOLD << company << END << '\n'
+                << BROWN_BOLD << "["  << benetype1 
                 << "] " << bene1  << '\t'
                 << " [" << benetype2 
                 << "] " << bene2 << END << '\n'
-                << LGREEN << "연회비 " << '\t'
+                << LGREEN_BOLD << "연회비 " << '\t'
                 <<  annualFee << END <<'\t'
-                << LBLUE << " 전월실적 " << '\t'
+                << LBLUE_BOLD << " 전월실적 " << '\t'
                 << preMonSpending << END << "\n-----------------------------------------------------------------------------------------------\n" 
                 << std::endl;
         }
